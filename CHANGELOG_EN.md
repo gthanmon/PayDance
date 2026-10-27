@@ -4,24 +4,32 @@
 
 This file records this fork's enhancements and preserves the upstream PayDance release history.
 
-Build artifacts and verification files are available in [GitHub Releases](https://github.com/MrBaoboer/PayDance/releases).
+Upstream releases and original build artifacts are available in [PayDance Releases](https://github.com/MrBaoboer/PayDance/releases).
 
 ## Unreleased
 
-### Fork enhancements (2026-10-27)
+### Taskbar Enhanced (2026-10-27)
 
-- Show live earnings inside the primary horizontal Windows taskbar and reattach after Explorer recreates it. Hide the tray icon while the amount is available; restore a recovery icon when embedding is disabled or fails.
-- Double-click the amount to open the dashboard and leave mini mode or open sheets. A native context menu offers the dashboard, settings, hide, mini mode, always on top and quit.
-- Match TrafficMonitor with compact regular 10pt Microsoft YaHei text on its left. Fix excessive spacing, repeated leftward layout drift and `CreateWindowExW failed (1460)`.
-- Allow signed horizontal offsets from `-2000` to `2000`. Save changes immediately and flush state before hiding, fixing offsets reverting to zero after restart.
-- Add hover details for earnings and estimates, work status, elapsed time, progress, countdowns, working hours, lunch, hourly and per-second rates, pay mode and workdays.
-- Add automatic monthly workday counts for two-day weekends, a single rest day or alternating weeks, with configurable rest day and reference week. Chinese holiday and makeup dates override the weekly schedule; monthly salary uses the actual month's workdays.
-- Bundle 2025/2026 holiday data, cache online updates, validate dates and annual completeness, and retain offline data after failures. Unknown years are labelled as estimates. Keep manual mode and add a monthly calendar preview.
-- Start silently with `--autostart` while manual launches still open the window. Migrate enabled legacy startup entries to `C:\Program Files\paydance\PayDance.exe`; preserve disabled autostart and update by replacing the same file.
-- Accept `HH:mm`, `HH:mm:ss` and fractional seconds in time validation and salary calculations, fixing incorrect work/lunch time errors on Windows.
-- Preserve existing valid settings and manual workday preferences. Add `npm run build:exe:enhanced` for a stable EXE name and SHA256 file, with upstream update checks disabled in enhanced builds.
+#### Added
 
-See the [release notes](docs/UPDATES_2026-10-27.md) for upgrades, data sources and validation boundaries.
+- Live earnings in the Windows taskbar, with double-click dashboard access and a context menu for common actions.
+- Hover details for income, work progress, time remaining and pay rates.
+- Automatic monthly workday calculation for two-day weekends, a single rest day or alternating weeks, including Chinese holidays and makeup workdays.
+- A monthly calendar preview, offline calendar data and cached online updates. Years without confirmed data are labelled as estimates.
+
+#### Improved
+
+- Configurable taskbar positioning with persistent display preferences.
+- More stable taskbar layout, window recovery and background operation.
+- Chinese and English text for the new features.
+
+#### Fixed
+
+- Incorrect validation of some Windows time inputs, including values with seconds or fractional seconds.
+- Taskbar attachment failures and positioning issues in certain layouts.
+- Horizontal offsets reverting to their default value after restarting.
+
+See the [release notes](docs/UPDATES_2026-10-27.md) for compatibility and upgrade information.
 
 ### Upstream unreleased changes
 
