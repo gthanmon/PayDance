@@ -23,7 +23,14 @@ try {
   if ($OutputName -ne [System.IO.Path]::GetFileName($OutputName) -or -not $OutputName.EndsWith('.exe')) { throw 'OutputName must be an EXE file name.' }
   $taskArtifact = Join-Path (Join-Path $taskProjectRoot 'release-assets') $OutputName
   Copy-Item -LiteralPath 'src-tauri/target/release/pay-dance.exe' -Destination $taskArtifact -Force
-  $taskHash = (Get-FileHash -LiteralPath $taskArtifact -Algorithm SHA256).Hash.ToLowerInvariant()
+  $taskHasher = [System.Security.Cryptography.SHA256]::Create()
+  $taskExeStream = [System.IO.File]::OpenRead($taskArtifact)
+  try {
+    $taskHash = [System.BitConverter]::ToString($taskHasher.ComputeHash($taskExeStream)).Replace('-', '').ToLowerInvariant()
+  } finally {
+    $taskExeStream.Dispose()
+    $taskHasher.Dispose()
+  }
   [System.IO.File]::WriteAllText("$taskArtifact.sha256", "$taskHash  $OutputName`n", [System.Text.UTF8Encoding]::new($false))
   Write-Output "Built: $taskArtifact"
   Write-Output "SHA256: $taskHash"
