@@ -539,6 +539,20 @@ describe("validateSalaryConfig", () => {
 });
 
 describe("validateSalaryConfig bounds", () => {
+  it("validates and calculates Windows time input values with seconds", () => {
+    const windowsConfig = {
+      ...config,
+      startTime: "09:00:00",
+      endTime: "17:25:00",
+      lunchStart: "11:40:00",
+      lunchEnd: "13:20:00",
+    };
+    expect(validateSalaryConfig(windowsConfig, vt)).toEqual([]);
+    const snapshot = calculateSalarySnapshot(at("14:00"), windowsConfig);
+    expect(snapshot.workMsToday).toBe(405 * 60_000);
+    expect(snapshot.status).toBe("working");
+  });
+
   it("rejects more than 31 work days per month", () => {
     const issues = validateSalaryConfig(
       { ...defaultSalaryConfig, workDaysPerMonth: 32 },

@@ -68,6 +68,8 @@ export function classifyUpdateError(
 }
 
 export async function checkForUpdate(): Promise<UpdaterStatus> {
+  if (import.meta.env.VITE_PAYDANCE_LOCAL_BUILD === "true")
+    return { kind: "unavailable", reason: "dev-config" };
   try {
     const { check } = await import("@tauri-apps/plugin-updater");
     const update = await check();
@@ -85,6 +87,8 @@ export async function checkForUpdate(): Promise<UpdaterStatus> {
 }
 
 export async function downloadAndInstall(): Promise<UpdaterStatus> {
+  if (import.meta.env.VITE_PAYDANCE_LOCAL_BUILD === "true")
+    return { kind: "unavailable", reason: "dev-config" };
   try {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<PortableUpdateResult>("install_portable_update");

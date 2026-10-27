@@ -6,6 +6,7 @@ src-tauri/gen
 release-assets/
 .vercel/
 .tools
+.build-tools/
 /tmp/
 /.tmp/
 *.log

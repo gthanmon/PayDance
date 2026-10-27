@@ -8,6 +8,9 @@ export const settingsStoreFileName = "salary-settings.json";
 export const settingsStoreKeys = {
   alwaysOnTop: "alwaysOnTop",
   amountMode: "amountMode",
+  taskbarAmountEnabled: "taskbarAmountEnabled",
+  taskbarAmountOffset: "taskbarAmountOffset",
+  taskbarOnly: "taskbarOnly",
   config: "config",
   currencySymbol: "currencySymbol",
   fullSize: "fullSize",

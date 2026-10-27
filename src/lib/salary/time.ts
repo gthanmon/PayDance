@@ -7,17 +7,19 @@ export const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 export const parseTimeToMinutes = (time: string) => {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(time);
+  // Native time inputs can return seconds even when their step is one minute.
+  const match = /^(\d{1,2}):(\d{2})(?::(\d{2})(\.\d{1,3})?)?$/.exec(time);
   if (!match) return Number.NaN;
 
   const hour = Number(match[1]);
   const minute = Number(match[2]);
+  const second = Number(match[3] ?? 0) + Number(match[4] ?? 0);
 
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second >= 60) {
     return Number.NaN;
   }
 
-  return hour * 60 + minute;
+  return hour * 60 + minute + second / 60;
 };
 
 export const normalizeWorkEnd = (start: number, end: number) =>
@@ -38,7 +40,13 @@ export const normalizeBreakEnd = (breakStart: number, breakEnd: number) => {
 
 export const dateAtMinutes = (base: Date, minutes: number) => {
   const date = new Date(base);
-  date.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+  const milliseconds = Math.round(minutes * 60_000);
+  date.setHours(
+    Math.floor(milliseconds / 3_600_000),
+    Math.floor(milliseconds / 60_000) % 60,
+    Math.floor(milliseconds / 1_000) % 60,
+    milliseconds % 1_000,
+  );
   return date;
 };
 

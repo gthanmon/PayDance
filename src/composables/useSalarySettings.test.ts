@@ -5,6 +5,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultSalaryConfig } from "../lib/salary";
+import { settingsSchemaVersion } from "../lib/settings-migration";
 import {
   defaultMiniOpacityPercent,
   fullWindowSize,
@@ -21,11 +22,53 @@ const storeMocks = {
 const createMockStore = () => Promise.resolve(storeMocks);
 
 describe("useSalarySettings", () => {
+  it("restores taskbar preferences and preserves valid Windows seconds in saved times", async () => {
+    const windowsConfig = {
+      ...defaultSalaryConfig,
+      startTime: "09:00:00",
+      endTime: "17:25:00",
+      lunchStart: "11:40:00",
+      lunchEnd: "13:20:00",
+    };
+    storeMocks.get.mockImplementation(
+      async (key: string) =>
+        ({
+          config: windowsConfig,
+          settingsVersion: 4,
+          taskbarAmountEnabled: true,
+          taskbarAmountOffset: 120,
+        })[key],
+    );
+    const { useSalarySettings } = await import("./useSalarySettings");
+    const settings = useSalarySettings(createMockStore);
+    const preferences = await settings.loadSettings();
+    expect(settings.config.value.startTime).toBe("09:00:00");
+    expect(settings.taskbarAmountEnabled.value).toBe(true);
+    expect(settings.taskbarAmountOffset.value).toBe(120);
+    await settings.saveSettings(preferences);
+    expect(storeMocks.set).toHaveBeenCalledWith("taskbarAmountEnabled", true);
+    expect(storeMocks.set).toHaveBeenCalledWith("taskbarAmountOffset", 120);
+    expect(storeMocks.set).toHaveBeenCalledWith("config", windowsConfig);
+  });
+
   beforeEach(() => {
     storeMocks.delete.mockReset();
     storeMocks.get.mockReset();
     storeMocks.set.mockReset();
     storeMocks.save.mockReset();
+  });
+
+  it("restores and saves a negative taskbar offset without resetting it to zero", async () => {
+    storeMocks.get.mockImplementation(
+      async (key: string) =>
+        ({ config: defaultSalaryConfig, taskbarAmountOffset: -30 })[key],
+    );
+    const { useSalarySettings } = await import("./useSalarySettings");
+    const settings = useSalarySettings(createMockStore);
+    const preferences = await settings.loadSettings();
+    expect(settings.taskbarAmountOffset.value).toBe(-30);
+    await settings.saveSettings(preferences);
+    expect(storeMocks.set).toHaveBeenCalledWith("taskbarAmountOffset", -30);
   });
 
   it("falls back to in-memory defaults without touching a store it cannot read", async () => {
@@ -97,7 +140,7 @@ describe("useSalarySettings", () => {
 
     expect(backupUnreadable).toHaveBeenCalledOnce();
     expect(storeMocks.set).toHaveBeenCalledWith("config", defaultSalaryConfig);
-    expect(storeMocks.set).toHaveBeenCalledWith("settingsVersion", 4);
+    expect(storeMocks.set).toHaveBeenCalledWith("settingsVersion", settingsSchemaVersion);
     expect(storeMocks.save).toHaveBeenCalled();
     expect(settingsSaveError.value).toBe("settings.loadRecovered");
     expect(hasCompletedOnboarding.value).toBe(false);
@@ -146,7 +189,7 @@ describe("useSalarySettings", () => {
     expect(config.value.enableLunchBreak).toBe(defaultSalaryConfig.enableLunchBreak);
     expect(settings).not.toHaveProperty("settingsRecoveryNotice");
     expect(storeMocks.set).toHaveBeenCalledWith("config", config.value);
-    expect(storeMocks.set).toHaveBeenCalledWith("settingsVersion", 4);
+    expect(storeMocks.set).toHaveBeenCalledWith("settingsVersion", settingsSchemaVersion);
     expect(storeMocks.save).toHaveBeenCalled();
   });
 

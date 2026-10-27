@@ -2,11 +2,28 @@
 
 > [中文版 →](CHANGELOG.md)
 
-This file records official PayDance releases and is the source of the GitHub Release notes.
+This file records this fork's enhancements and preserves the upstream PayDance release history.
 
 Build artifacts and verification files are available in [GitHub Releases](https://github.com/MrBaoboer/PayDance/releases).
 
 ## Unreleased
+
+### Fork enhancements (2026-10-27)
+
+- Show live earnings inside the primary horizontal Windows taskbar and reattach after Explorer recreates it. Hide the tray icon while the amount is available; restore a recovery icon when embedding is disabled or fails.
+- Double-click the amount to open the dashboard and leave mini mode or open sheets. A native context menu offers the dashboard, settings, hide, mini mode, always on top and quit.
+- Match TrafficMonitor with compact regular 10pt Microsoft YaHei text on its left. Fix excessive spacing, repeated leftward layout drift and `CreateWindowExW failed (1460)`.
+- Allow signed horizontal offsets from `-2000` to `2000`. Save changes immediately and flush state before hiding, fixing offsets reverting to zero after restart.
+- Add hover details for earnings and estimates, work status, elapsed time, progress, countdowns, working hours, lunch, hourly and per-second rates, pay mode and workdays.
+- Add automatic monthly workday counts for two-day weekends, a single rest day or alternating weeks, with configurable rest day and reference week. Chinese holiday and makeup dates override the weekly schedule; monthly salary uses the actual month's workdays.
+- Bundle 2025/2026 holiday data, cache online updates, validate dates and annual completeness, and retain offline data after failures. Unknown years are labelled as estimates. Keep manual mode and add a monthly calendar preview.
+- Start silently with `--autostart` while manual launches still open the window. Migrate enabled legacy startup entries to `C:\Program Files\paydance\PayDance.exe`; preserve disabled autostart and update by replacing the same file.
+- Accept `HH:mm`, `HH:mm:ss` and fractional seconds in time validation and salary calculations, fixing incorrect work/lunch time errors on Windows.
+- Preserve existing valid settings and manual workday preferences. Add `npm run build:exe:enhanced` for a stable EXE name and SHA256 file, with upstream update checks disabled in enhanced builds.
+
+See the [release notes](docs/UPDATES_2026-10-27.md) for upgrades, data sources and validation boundaries.
+
+### Upstream unreleased changes
 
 - **One EXE per Release**: every Release used to upload the same executable twice, once with the version in the name and once under a fixed name, plus two `.sha256` files, which read as duplicate files on the Release page. Only the versioned `pay-dance-v<version>-windows-x64.exe` remains. The site button and the README now go through `paydance.vercel.app/download/windows`, which learns the newest tag from GitHub and redirects to that file, so the link never 404s while a release is being published and needs no per-release edit; `latest.json` pins its download URL to the tag; Post-Release Smoke rejects a Release that carries a second `.exe` and checks that the endpoint points at the release under test. The fixed-name copies were removed from the v0.9.10 and v0.9.9 pages.
 

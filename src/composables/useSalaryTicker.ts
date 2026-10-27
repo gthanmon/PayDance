@@ -11,6 +11,7 @@ import {
 } from "../lib/salary";
 import type { ValidateT } from "../lib/salary/validation";
 import { createMonotonicWallClock } from "../lib/monotonic-clock";
+import { ensureCalendarForDate } from "../lib/work-calendar";
 
 const minTickerIntervalMs = 120;
 const maxActiveTickerIntervalMs = 1_000;
@@ -76,6 +77,7 @@ export function useSalaryTicker(
         monotonicMs: performance.now(),
         wallTimeMs: Date.now(),
       });
+      ensureCalendarForDate(now, config.value);
       snapshot.value = calculateSalarySnapshot(now, config.value, t);
       timerId = window.setTimeout(tick, resolveNextTickDelay(snapshot.value));
     };

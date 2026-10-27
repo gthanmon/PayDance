@@ -11,6 +11,7 @@ import {
   parseTimeToMinutes,
 } from "./time";
 import type { Messages } from "../../i18n/types";
+import { calendarSettingValidators } from "../work-calendar/settings";
 
 const salaryTypes: SalaryType[] = ["monthly", "daily", "hourly"];
 
@@ -40,6 +41,13 @@ export function validateSalaryConfig(
   const start = parseTimeToMinutes(config.startTime);
   const end = parseTimeToMinutes(config.endTime);
   const salaryType = config.salaryType ?? "monthly";
+  const automatic = config.calendarMode === "china";
+  for (const [key, validate] of Object.entries(calendarSettingValidators)) {
+    const field = key as keyof typeof calendarSettingValidators;
+    if (config[field] !== undefined && !validate(config[field])) {
+      issues.push({ field, message: t("validation.calendarOptions") });
+    }
+  }
 
   if (!salaryTypes.includes(salaryType)) {
     issues.push({ field: "salaryType", message: t("validation.salaryTypeError") });
@@ -57,21 +65,29 @@ export function validateSalaryConfig(
     issues.push({ field: "hourlyRate", message: t("validation.hourlyPositive") });
   }
 
-  if (salaryType === "monthly" && !hasPositiveNumber(config.workDaysPerMonth)) {
+  if (
+    !automatic &&
+    salaryType === "monthly" &&
+    !hasPositiveNumber(config.workDaysPerMonth)
+  ) {
     issues.push({
       field: "workDaysPerMonth",
       message: t("validation.workDaysPositive"),
     });
-  } else if (salaryType === "monthly" && config.workDaysPerMonth > maxWorkDaysPerMonth) {
+  } else if (
+    !automatic &&
+    salaryType === "monthly" &&
+    config.workDaysPerMonth > maxWorkDaysPerMonth
+  ) {
     issues.push({
       field: "workDaysPerMonth",
       message: t("validation.workDaysRange"),
     });
   }
 
-  if (!Array.isArray(config.workdays) || config.workdays.length <= 0) {
+  if (!automatic && (!Array.isArray(config.workdays) || config.workdays.length <= 0)) {
     issues.push({ field: "workdays", message: t("validation.workdaysMinOne") });
-  } else if (!config.workdays.every(isValidWorkday)) {
+  } else if (!automatic && !config.workdays.every(isValidWorkday)) {
     issues.push({ field: "workdays", message: t("validation.workdaysError") });
   }
 

@@ -62,8 +62,14 @@ Used only for builds, tests, and verification; not shipped as standalone package
 | `tauri-plugin-single-instance` | Apache-2.0 OR MIT |
 | `tauri-plugin-store` | Apache-2.0 OR MIT |
 | `tauri-plugin-updater` | Apache-2.0 OR MIT |
+| `windows-sys` | Apache-2.0 OR MIT |
+
+## Holiday data
+
+The bundled 2025/2026 mainland China holiday and makeup workday calendars, and subsequent annual updates, come from [NateScarlet/holiday-cn](https://github.com/NateScarlet/holiday-cn), referencing the State Council notices recorded in each dataset. MIT License, Copyright (c) 2019 NateScarlet. The full license is in `src/lib/work-calendar/data/LICENSE` and the app's Workdays & holidays → Data source & license section.
 
 ## Fonts
+
 
 The desktop UI references locally installed fonts by name only (`Segoe UI Variable`, `Bahnschrift`, `JetBrains Mono`, `Consolas`, and similar) and does not bundle font files.
 

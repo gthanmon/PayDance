@@ -4,6 +4,7 @@
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
 
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { invoke } from "@tauri-apps/api/core";
 
 export type AutostartAdapter = {
   disable: () => Promise<void>;
@@ -17,9 +18,22 @@ export type AutostartResult = {
 };
 
 export const tauriAutostartAdapter: AutostartAdapter = {
-  disable,
-  enable,
-  isEnabled,
+  disable: async () => {
+    if (typeof navigator !== "undefined" && navigator.userAgent.includes("Windows")) {
+      await invoke("configure_local_autostart", { enabled: false });
+    } else await disable();
+  },
+  enable: async () => {
+    if (typeof navigator !== "undefined" && navigator.userAgent.includes("Windows")) {
+      await invoke("configure_local_autostart", { enabled: true });
+    } else await enable();
+  },
+  isEnabled: async () => {
+    if (typeof navigator !== "undefined" && navigator.userAgent.includes("Windows")) {
+      return invoke<boolean>("configure_local_autostart", { enabled: null });
+    }
+    return isEnabled();
+  },
 };
 
 export async function readAutostartEnabled(
@@ -60,7 +74,7 @@ export async function setAutostartEnabled(
     console.error("Failed to update autostart state", error);
     return {
       enabled: previousEnabled,
-      error: errorMessage,
+      error: typeof error === "string" ? `${errorMessage} ${error}` : errorMessage,
     };
   }
 }

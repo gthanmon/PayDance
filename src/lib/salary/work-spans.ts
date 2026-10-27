@@ -4,6 +4,7 @@
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
 
 import type { SalaryConfig } from "./config";
+import { calendarDay } from "../work-calendar";
 import {
   dateAtMinutes,
   normalizeBreakEnd,
@@ -16,6 +17,7 @@ import {
 export type WorkSpan = readonly [Date, Date];
 
 export function isConfiguredWorkday(date: Date, config: SalaryConfig) {
+  if (config.calendarMode === "china") return calendarDay(date, config).working;
   if (!Array.isArray(config.workdays) || config.workdays.length <= 0) {
     return false;
   }

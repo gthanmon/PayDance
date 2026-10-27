@@ -721,7 +721,8 @@ describe("PayDance Web Preview", () => {
     const readmeSource = read("README.md");
 
     expect(readmeSource).not.toContain("## 近期改进");
-    expect(readmeSource).toContain('<h1 align="center">薪跳 PayDance</h1>');
+    expect(readmeSource).toContain('<h1 align="center">PayDance 任务栏增强版</h1>');
+    expect(readmeSource).toContain("非官方修改版本");
     expect(readmeSource).toContain("桌面实时工资看板");
     expect(readmeSource).toContain("在线体验");
     expect(readmeSource).toContain("Windows 桌面版");

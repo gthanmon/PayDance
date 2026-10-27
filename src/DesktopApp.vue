@@ -5,6 +5,7 @@
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useDesktopTaskbar } from "./composables/useTaskbarAmount";
 import {
   miniDefaultSize,
   fullWindowSize,
@@ -39,6 +40,7 @@ import MiniOpacityPanel from "./components/MiniOpacityPanel.vue";
 const appWindow = getCurrentWindow();
 const isOpacityPanelWindow = appWindow.label === "mini-opacity";
 const updateStatus = ref<UpdaterStatus>({ kind: "upToDate" });
+const settings = useSalarySettings(undefined, () => t.value);
 const {
   amountMode,
   alwaysOnTop,
@@ -51,8 +53,7 @@ const {
   saveSettings,
   settingsSaveError,
   themeMode,
-} = useSalarySettings(undefined, () => t.value);
-
+} = settings;
 const { t } = provideI18n(locale);
 
 // Watch the ref rather than hooking setLocale: restoring the saved language at startup — and
@@ -117,6 +118,7 @@ const { applyThemeMode, isThemeSwitching, setThemeMode, toggleTheme } = useTheme
 const {
   activeView,
   completeOnboarding,
+  openMainWindow,
   openSettings,
   setMiniMode,
   shouldShowOnboarding,
@@ -158,7 +160,16 @@ const {
   statusText,
   workedTimeText,
 } = useDashboardModel(config, snapshot, t.value, locale);
-
+const taskbar = useDesktopTaskbar(settings, {
+  appWindow,
+  earnedText,
+  hasConfigIssues,
+  snapshot,
+  saveStateNow,
+  scheduleSaveState,
+  setMiniMode,
+  t,
+});
 const shellClass = computed(() =>
   themeMode.value === "dark" ? "theme-dark" : "theme-light",
 );
@@ -203,9 +214,7 @@ const { clearWindowLifecycleTimers, registerWindowLifecycle } = useAppWindowLife
 );
 
 watch(config, scheduleSaveState, { deep: true });
-// These three live outside the window state the persistence layer watches, and nothing else
-// saves after they change: without this, picking a currency symbol, an amount animation or a
-// language and then losing the process would silently roll the choice back.
+// Persist currency, animation and locale alongside window state.
 watch([amountMode, currencySymbol, locale], scheduleSaveState);
 const unlisteners: Array<() => void> = [];
 
@@ -246,6 +255,7 @@ onMounted(async () => {
       scheduleSaveState();
     }),
     ...(await registerTrayActions(appWindow, {
+      openMainWindow,
       openSettings,
       toggleAlwaysOnTop,
       toggleMiniMode,
@@ -253,7 +263,7 @@ onMounted(async () => {
   );
 
   startTicker();
-
+  await taskbar?.finishStartup();
   // Silent background update check — never blocks the UI
   checkForUpdate().then((status) => {
     updateStatus.value = status;

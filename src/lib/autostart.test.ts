@@ -7,8 +7,12 @@ import { describe, expect, it, vi } from "vitest";
 import {
   readAutostartEnabled,
   setAutostartEnabled,
+  tauriAutostartAdapter,
   type AutostartAdapter,
 } from "./autostart";
+
+const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
+vi.mock("@tauri-apps/api/core", () => ({ invoke }));
 
 const createAdapter = (enabled: boolean): AutostartAdapter => ({
   disable: vi.fn().mockResolvedValue(undefined),
@@ -17,6 +21,26 @@ const createAdapter = (enabled: boolean): AutostartAdapter => ({
 });
 
 describe("autostart", () => {
+  it("uses the managed installed path for Windows and lets the native side remove legacy entries", async () => {
+    vi.stubGlobal("navigator", { userAgent: "Windows NT 10.0" });
+    try {
+      invoke.mockResolvedValue(true);
+      await tauriAutostartAdapter.enable();
+      expect(invoke).toHaveBeenLastCalledWith("configure_local_autostart", {
+        enabled: true,
+      });
+      await tauriAutostartAdapter.isEnabled();
+      expect(invoke).toHaveBeenLastCalledWith("configure_local_autostart", {
+        enabled: null,
+      });
+      await tauriAutostartAdapter.disable();
+      expect(invoke).toHaveBeenLastCalledWith("configure_local_autostart", {
+        enabled: false,
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
   it("reads the current autostart state", async () => {
     await expect(readAutostartEnabled(createAdapter(true))).resolves.toEqual({
       enabled: true,

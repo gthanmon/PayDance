@@ -113,6 +113,13 @@ export function useAppShell({
     await saveStateNow();
   };
 
+  const openMainWindow = async () => {
+    showSettings.value = false;
+    showSalaryInfo.value = false;
+    if (isMiniMode.value) await applyMiniMode(false);
+    await saveStateNow();
+  };
+
   const completeOnboarding = async () => {
     hasCompletedOnboarding.value = true;
     await applyThemeMode(themeMode.value, { persist: false });
@@ -123,6 +130,7 @@ export function useAppShell({
   return {
     activeView,
     completeOnboarding,
+    openMainWindow,
     openSettings,
     setMiniMode,
     shouldShowOnboarding,

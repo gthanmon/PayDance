@@ -4,6 +4,7 @@
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
 
 export type SalaryType = "monthly" | "daily" | "hourly";
+export type WorkSchedule = "double" | "single" | "alternating";
 
 export type SalaryStatus =
   | "invalid-config"
@@ -20,6 +21,11 @@ export type SalaryConfig = {
   hourlyRate: number;
   workDaysPerMonth: number;
   workdays: number[];
+  calendarMode?: "manual" | "china";
+  workSchedule?: WorkSchedule;
+  weeklyRestDay?: number;
+  alternatingWeekAnchor?: string;
+  alternatingAnchorIsSingle?: boolean;
   startTime: string;
   endTime: string;
   lunchStart: string;

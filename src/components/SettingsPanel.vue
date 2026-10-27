@@ -19,8 +19,9 @@ import SalaryAmountFields from "./settings/SalaryAmountFields.vue";
 import SalaryModeControl from "./settings/SalaryModeControl.vue";
 import SettingsAboutFooter from "./settings/SettingsAboutFooter.vue";
 import SettingsOnboardingAction from "./settings/SettingsOnboardingAction.vue";
-import WorkdayPicker from "./settings/WorkdayPicker.vue";
+import WorkCalendarSettings from "./settings/WorkCalendarSettings.vue";
 import WorkTimeFields from "./settings/WorkTimeFields.vue";
+import TaskbarAmountSettings from "./settings/TaskbarAmountSettings.vue";
 import SegmentedControl from "./ui/SegmentedControl.vue";
 import SettingsGroup from "./ui/SettingsGroup.vue";
 import SwitchRow from "./ui/SwitchRow.vue";
@@ -121,12 +122,11 @@ const updateConfig = <Key extends keyof SalaryConfig>(
       />
     </SettingsGroup>
 
-    <SettingsGroup :title="t('settings.workdays')">
-      <WorkdayPicker
-        density="settings"
+    <SettingsGroup :title="t('calendar.heading')">
+      <WorkCalendarSettings
         :invalid="hasIssue('workdays')"
-        :workdays="config.workdays"
-        @update:workdays="updateConfig('workdays', $event)"
+        :config="config"
+        @update:config="emit('update:config', $event)"
       />
     </SettingsGroup>
 
@@ -175,6 +175,8 @@ const updateConfig = <Key extends keyof SalaryConfig>(
         @update:model-value="updateLocale"
       />
     </SettingsGroup>
+
+    <TaskbarAmountSettings v-if="showDesktopFeatures" />
 
     <SettingsGroup v-if="showDesktopFeatures" :title="t('settings.startup')">
       <template #action>

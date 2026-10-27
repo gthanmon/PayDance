@@ -4,6 +4,7 @@
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
 
 export const trayEventNames = {
+  openMain: "tray-open-main",
   openSettings: "tray-open-settings",
   toggleAlwaysOnTop: "tray-toggle-always-on-top",
   toggleMiniMode: "tray-toggle-mini-mode",

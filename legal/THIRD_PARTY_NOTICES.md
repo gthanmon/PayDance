@@ -62,6 +62,11 @@
 | `tauri-plugin-single-instance` | Apache-2.0 OR MIT |
 | `tauri-plugin-store` | Apache-2.0 OR MIT |
 | `tauri-plugin-updater` | Apache-2.0 OR MIT |
+| `windows-sys` | Apache-2.0 OR MIT |
+
+## 节假日数据
+
+内置的 2025、2026 年中国大陆放假及调休日期，以及联网获取后续年份的数据，来源于 [NateScarlet/holiday-cn](https://github.com/NateScarlet/holiday-cn)，按其记录的国务院通知整理。数据采用 MIT 许可，Copyright (c) 2019 NateScarlet。完整许可位于 `src/lib/work-calendar/data/LICENSE`，并显示在应用“工作日与节假日 → 数据来源与许可”中。
 
 ## 字体
 

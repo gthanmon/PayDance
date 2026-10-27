@@ -7,6 +7,7 @@ import type { SalaryConfig, SalaryConfigIssue } from "../../lib/salary";
 import LunchBreakFields from "../settings/LunchBreakFields.vue";
 import WorkdayPicker from "../settings/WorkdayPicker.vue";
 import WorkTimeFields from "../settings/WorkTimeFields.vue";
+import WorkCalendarSettings from "../settings/WorkCalendarSettings.vue";
 
 const props = defineProps<{
   config: SalaryConfig;
@@ -27,7 +28,13 @@ const updateConfig = <Key extends keyof SalaryConfig>(
 
 <template>
   <section class="onboarding-step">
+    <WorkCalendarSettings
+      v-if="config.calendarMode === 'china'"
+      :config="config"
+      @update:config="emit('update:config', $event)"
+    />
     <WorkdayPicker
+      v-else
       density="onboarding"
       :invalid="hasIssue('workdays')"
       :workdays="config.workdays"

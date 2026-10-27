@@ -76,7 +76,7 @@ describe("settings migration", () => {
   });
 
   it("declares the v0.5 settings schema version", () => {
-    expect(settingsSchemaVersion).toBe(4);
+    expect(settingsSchemaVersion).toBe(5);
   });
 
   it("migrates saved configs through an explicit versioned chain", () => {

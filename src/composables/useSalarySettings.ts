@@ -24,6 +24,7 @@ import {
   settingsSchemaVersion,
 } from "../lib/settings-migration";
 import { settingsStoreFileName, settingsStoreKeys } from "../lib/settings-store";
+import { normalizeTaskbarOffset } from "../lib/taskbar-offset";
 import { createSettingsStore, type SettingsStoreAdapter } from "#settings-store";
 import { detectLocale, type Locale } from "./useI18n";
 
@@ -57,6 +58,9 @@ export function useSalarySettings(
   const alwaysOnTop = ref(true);
   const themeMode = ref<ThemeMode>("light");
   const amountMode = ref<AmountMode>("rolling");
+  const taskbarAmountEnabled = ref(false);
+  const taskbarAmountOffset = ref(0);
+  const taskbarOnly = ref(false);
   const locale = ref<Locale>("zh-CN");
   const hasCompletedOnboarding = ref(false);
   const isSettingsReady = ref(false);
@@ -83,6 +87,9 @@ export function useSalarySettings(
     alwaysOnTop.value = true;
     themeMode.value = "light";
     amountMode.value = "rolling";
+    taskbarAmountEnabled.value = false;
+    taskbarAmountOffset.value = 0;
+    taskbarOnly.value = false;
     locale.value = detectLocale(undefined);
     hasCompletedOnboarding.value = false;
   };
@@ -185,6 +192,16 @@ export function useSalarySettings(
     const savedTop = await store.get<boolean>(settingsStoreKeys.alwaysOnTop);
     const savedTheme = await store.get<ThemeMode>(settingsStoreKeys.themeMode);
     const savedAmountMode = await store.get<AmountMode>(settingsStoreKeys.amountMode);
+    const savedTaskbarEnabled = await store.get<unknown>(
+      settingsStoreKeys.taskbarAmountEnabled,
+    );
+    const savedTaskbarOffset = await store.get<unknown>(
+      settingsStoreKeys.taskbarAmountOffset,
+    );
+    taskbarAmountEnabled.value = savedTaskbarEnabled === true;
+    taskbarOnly.value =
+      (await store.get<unknown>(settingsStoreKeys.taskbarOnly)) === true;
+    taskbarAmountOffset.value = normalizeTaskbarOffset(savedTaskbarOffset);
     const savedIsMiniMode = await store.get<boolean>(settingsStoreKeys.isMiniMode);
     const savedFullSize = await store.get<WindowSize>(settingsStoreKeys.fullSize);
     const savedMiniSize = await store.get<WindowSize>(settingsStoreKeys.miniSize);
@@ -324,6 +341,12 @@ export function useSalarySettings(
       await store.set(settingsStoreKeys.isMiniMode, isMiniMode);
       await store.set(settingsStoreKeys.themeMode, themeMode.value);
       await store.set(settingsStoreKeys.amountMode, amountMode.value);
+      await store.set(settingsStoreKeys.taskbarAmountEnabled, taskbarAmountEnabled.value);
+      await store.set(
+        settingsStoreKeys.taskbarAmountOffset,
+        normalizeTaskbarOffset(taskbarAmountOffset.value),
+      );
+      await store.set(settingsStoreKeys.taskbarOnly, taskbarOnly.value);
       await store.set(settingsStoreKeys.locale, locale.value);
       await store.set(settingsStoreKeys.miniSize, miniSize);
       await store.set(settingsStoreKeys.miniOpacityPercent, miniOpacityPercent);
@@ -358,6 +381,9 @@ export function useSalarySettings(
 
   return {
     amountMode,
+    taskbarAmountEnabled,
+    taskbarAmountOffset,
+    taskbarOnly,
     alwaysOnTop,
     config,
     currencySymbol,

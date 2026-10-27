@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
-import { computed, useId } from "vue";
+import { computed, toRef, useId } from "vue";
 import { parseNumberInput } from "../../lib/number-input";
 import type { SalaryConfig, SalaryConfigIssue } from "../../lib/salary";
 import { createGetSalaryAmountLabel } from "../../lib/settings-form";
 import { defaultCurrencySymbol } from "../../lib/currency";
 import { useCurrency } from "../../composables/useCurrency";
 import { useI18n } from "../../composables/useI18n";
+import { useWorkCalendar } from "../../composables/useWorkCalendar";
 
 const { t } = useI18n();
 const { currencySymbol } = useCurrency();
@@ -23,6 +24,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   "update:config": [config: SalaryConfig];
 }>();
+const { month } = useWorkCalendar(toRef(props, "config"));
+const automatic = computed(() => props.config.calendarMode === "china");
 
 const salaryAmountLabel = computed(() =>
   createGetSalaryAmountLabel(t.value)(props.config.salaryType),
@@ -118,15 +121,18 @@ const updateNumberConfig = <Key extends keyof SalaryConfig>(key: Key, event: Eve
       :for="`${idPrefix}-work-days-per-month`"
       :class="{ 'is-invalid': hasIssue('workDaysPerMonth') }"
     >
-      <span>{{ t("salaryAmount.workDaysPerMonth") }}</span>
+      <span>{{
+        t(automatic ? "calendar.autoDays" : "salaryAmount.workDaysPerMonth")
+      }}</span>
       <span class="field-input-wrap">
         <input
           :id="`${idPrefix}-work-days-per-month`"
-          :value="config.workDaysPerMonth"
+          :value="automatic ? month.workDays : config.workDaysPerMonth"
+          :readonly="automatic"
           min="1"
           step="0.5"
           type="number"
-          @input="updateNumberConfig('workDaysPerMonth', $event)"
+          @input="!automatic && updateNumberConfig('workDaysPerMonth', $event)"
         />
         <span class="field-unit">{{ t("salaryAmount.unitDays") }}</span>
       </span>

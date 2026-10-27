@@ -3,7 +3,10 @@
 //
 // Additional terms: see /legal/ADDITIONAL_TERMS.md
 
-use std::sync::Mutex;
+use std::sync::{
+    Mutex,
+    atomic::{AtomicBool, Ordering},
+};
 use tauri::{
     App, AppHandle, Emitter, Listener, Manager, WebviewWindow, Window, WindowEvent,
     menu::MenuBuilder,
@@ -17,29 +20,34 @@ const WINDOW_SHOWN_EVENT: &str = "window-shown";
 
 struct TrayState {
     handle: Mutex<Option<tauri::tray::TrayIcon>>,
+    use_en: AtomicBool,
+    taskbar_available: AtomicBool,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum TrayAction {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TrayAction {
     Show,
     OpenSettings,
+    Hide,
     ToggleMiniMode,
     ToggleAlwaysOnTop,
     Quit,
 }
 
-struct TrayMenuLabels {
-    show: &'static str,
-    settings: &'static str,
-    toggle_mini: &'static str,
-    toggle_top: &'static str,
-    quit: &'static str,
+pub(crate) struct TrayMenuLabels {
+    pub show: &'static str,
+    pub settings: &'static str,
+    pub hide: &'static str,
+    pub toggle_mini: &'static str,
+    pub toggle_top: &'static str,
+    pub quit: &'static str,
 }
 
 fn tray_action_for_menu_id(id: &str) -> Option<TrayAction> {
     match id {
         "show" => Some(TrayAction::Show),
         "settings" => Some(TrayAction::OpenSettings),
+        "hide" => Some(TrayAction::Hide),
         "toggle_mini" => Some(TrayAction::ToggleMiniMode),
         "toggle_top" => Some(TrayAction::ToggleAlwaysOnTop),
         "quit" => Some(TrayAction::Quit),
@@ -47,11 +55,12 @@ fn tray_action_for_menu_id(id: &str) -> Option<TrayAction> {
     }
 }
 
-fn tray_menu_labels(use_en: bool) -> TrayMenuLabels {
+pub(crate) fn tray_menu_labels(use_en: bool) -> TrayMenuLabels {
     if use_en {
         TrayMenuLabels {
             show: "Open",
             settings: "Settings",
+            hide: "Hide Main Window",
             toggle_mini: "Mini Mode",
             toggle_top: "Always on Top",
             quit: "Quit",
@@ -60,6 +69,7 @@ fn tray_menu_labels(use_en: bool) -> TrayMenuLabels {
         TrayMenuLabels {
             show: "打开主界面",
             settings: "打开设置",
+            hide: "隐藏主窗口",
             toggle_mini: "切换迷你模式",
             toggle_top: "切换置顶",
             quit: "退出",
@@ -83,6 +93,7 @@ fn build_tray_menu(
     MenuBuilder::new(app)
         .text("show", labels.show)
         .text("settings", labels.settings)
+        .text("hide", labels.hide)
         .text("toggle_mini", labels.toggle_mini)
         .separator()
         .text("toggle_top", labels.toggle_top)
@@ -121,7 +132,10 @@ pub(crate) fn show_window(window: &WebviewWindow) {
 
 fn dispatch_tray_action(window: &WebviewWindow, action: TrayAction) {
     match action {
-        TrayAction::Show => show_window(window),
+        TrayAction::Show => crate::desktop_startup::request_main_window(window.app_handle()),
+        TrayAction::Hide => {
+            let _ = window.emit("taskbar-hide-main", ());
+        }
         TrayAction::OpenSettings => {
             show_window(window);
             let _ = window.emit(TRAY_OPEN_SETTINGS_EVENT, ());
@@ -141,16 +155,26 @@ fn dispatch_tray_action(window: &WebviewWindow, action: TrayAction) {
     }
 }
 
-pub(crate) fn setup(app: &mut App) -> Result<(), tauri::Error> {
-    let menu = build_tray_menu(app.handle(), false)?;
+pub(crate) fn dispatch_action(app: &AppHandle, action: TrayAction) {
+    if let Some(window) = app.get_webview_window("main") {
+        dispatch_tray_action(&window, action);
+    }
+}
+
+pub(crate) fn use_english(app: &AppHandle) -> bool {
+    app.state::<TrayState>().use_en.load(Ordering::Relaxed)
+}
+
+fn create_tray(app: &AppHandle, use_en: bool) -> Result<tauri::tray::TrayIcon, tauri::Error> {
+    let menu = build_tray_menu(app, use_en)?;
     let icon = app
         .default_window_icon()
         .cloned()
         .expect("window icon should be available");
 
-    let tray = TrayIconBuilder::with_id("pay-dance-tray")
+    TrayIconBuilder::with_id("pay-dance-tray")
         .icon(icon)
-        .tooltip(tray_tooltip(false))
+        .tooltip(tray_tooltip(use_en))
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_tray_icon_event(|tray, event| {
@@ -163,24 +187,49 @@ pub(crate) fn setup(app: &mut App) -> Result<(), tauri::Error> {
                 return;
             };
 
-            if let Some(window) = tray.app_handle().get_webview_window("main") {
-                show_window(&window);
-            }
+            crate::desktop_startup::request_main_window(tray.app_handle());
         })
         .on_menu_event(|app, event| {
             let Some(action) = tray_action_for_menu_id(event.id().as_ref()) else {
                 return;
             };
-            let Some(window) = app.get_webview_window("main") else {
-                return;
-            };
-
-            dispatch_tray_action(&window, action);
+            dispatch_action(app, action);
         })
-        .build(app)?;
+        .build(app)
+}
 
+// The amount itself is the entry point. Only create a notification icon when
+// embedding is disabled or unavailable; successful startup never adds one.
+pub(crate) fn set_taskbar_available(app: &AppHandle, available: bool) {
+    app.state::<TrayState>()
+        .taskbar_available
+        .store(available, Ordering::Relaxed);
+    refresh_tray_visibility(app);
+}
+
+fn refresh_tray_visibility(app: &AppHandle) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        let state = handle.state::<TrayState>();
+        let available = state.taskbar_available.load(Ordering::Relaxed);
+        if let Ok(mut guard) = state.handle.lock() {
+            if let Some(tray) = guard.as_ref() {
+                let _ = tray.set_visible(!available);
+            } else if !available {
+                match create_tray(&handle, state.use_en.load(Ordering::Relaxed)) {
+                    Ok(tray) => *guard = Some(tray),
+                    Err(error) => eprintln!("Cannot create recovery tray icon: {error}"),
+                }
+            }
+        }
+    });
+}
+
+pub(crate) fn setup(app: &mut App) -> Result<(), tauri::Error> {
     app.manage(TrayState {
-        handle: Mutex::new(Some(tray)),
+        handle: Mutex::new(None),
+        use_en: AtomicBool::new(false),
+        taskbar_available: AtomicBool::new(false),
     });
 
     let handle = app.handle().clone();
@@ -191,15 +240,28 @@ pub(crate) fn setup(app: &mut App) -> Result<(), tauri::Error> {
             let use_en = serde_json::from_str::<String>(event.payload())
                 .map(|locale| locale == "en")
                 .unwrap_or(false);
-            if let Ok(guard) = handle.state::<TrayState>().handle.lock()
-                && let Some(tray) = guard.as_ref()
-                && let Ok(menu) = build_tray_menu(&handle, use_en)
-            {
-                let _ = tray.set_menu(Some(menu));
-                let _ = tray.set_tooltip(Some(tray_tooltip(use_en)));
-            }
+            handle
+                .state::<TrayState>()
+                .use_en
+                .store(use_en, Ordering::Relaxed);
+            let localized_handle = handle.clone();
+            let _ = handle.run_on_main_thread(move || {
+                if let Ok(guard) = localized_handle.state::<TrayState>().handle.lock()
+                    && let Some(tray) = guard.as_ref()
+                    && let Ok(menu) = build_tray_menu(&localized_handle, use_en)
+                {
+                    let _ = tray.set_menu(Some(menu));
+                    let _ = tray.set_tooltip(Some(tray_tooltip(use_en)));
+                }
+            });
         });
     }
+
+    let handle = app.handle().clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(10));
+        refresh_tray_visibility(&handle);
+    });
 
     Ok(())
 }

@@ -49,7 +49,7 @@ describe("desktop window chrome", () => {
     expect(trayRs).toContain("TrayIconEvent::Click");
     expect(trayRs).toContain("MouseButton::Left");
     expect(trayRs).toContain("MouseButtonState::Up");
-    expect(trayRs).toContain("show_window(&window)");
+    expect(trayRs).toContain("desktop_startup::request_main_window(tray.app_handle())");
   });
 
   it("names the first tray action as opening the main window", () => {

@@ -14,8 +14,9 @@ import { clamp } from "./time";
 import { validateSalaryConfig, type ValidateT } from "./validation";
 import { resolveWorkSpans, type WorkSpan } from "./work-spans";
 import type { Messages } from "../../i18n/types";
+import { monthlyWorkDays } from "../work-calendar";
 
-function getDailySalary(config: SalaryConfig, totalWorkMs: number) {
+function getDailySalary(config: SalaryConfig, totalWorkMs: number, workDate: Date) {
   const workHours = totalWorkMs / 3_600_000;
 
   if (config.salaryType === "daily") {
@@ -26,7 +27,8 @@ function getDailySalary(config: SalaryConfig, totalWorkMs: number) {
     return config.hourlyRate * workHours;
   }
 
-  return config.monthlySalary / config.workDaysPerMonth;
+  const days = monthlyWorkDays(workDate, config);
+  return days > 0 ? config.monthlySalary / days : 0;
 }
 
 function getSnapshotStatus(
@@ -105,7 +107,7 @@ export function calculateSalarySnapshot(
     return sum + clamp(nowMs - start.getTime(), 0, spanMs);
   }, 0);
 
-  const dailySalary = getDailySalary(config, totalWorkMs);
+  const dailySalary = getDailySalary(config, totalWorkMs, spans[0][0]);
   const workHours = totalWorkMs / 3_600_000;
   const hourlyRate = dailySalary / workHours;
   const minuteRate = hourlyRate / 60;

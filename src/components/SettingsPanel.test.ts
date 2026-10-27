@@ -30,7 +30,7 @@ describe("settings panel", () => {
     [
       "t('settings.salaryMode')",
       "t('settings.salary')",
-      "t('settings.workdays')",
+      "t('calendar.heading')",
       "t('settings.workTime')",
       "t('settings.amountAnimation')",
     ].forEach((key) => {

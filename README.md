@@ -3,7 +3,7 @@
   <img src="src-tauri/icons/icon.png" alt="薪跳 PayDance" width="92">
 </p>
 
-<h1 align="center">薪跳 PayDance</h1>
+<h1 align="center">PayDance 任务栏增强版</h1>
 
 <p align="center">
   把「今天正在挣到的钱」放到桌面上，让每一秒的收入增长都看得见
@@ -22,6 +22,33 @@
   <a href="https://github.com/MrBaoboer/PayDance/releases"><img alt="下载量" src="https://img.shields.io/github/downloads/MrBaoboer/PayDance/total?style=flat&label=downloads&labelColor=1F2328&color=3D444D"></a>
   <a href="LICENSE"><img alt="许可" src="https://img.shields.io/badge/license-AGPL--3.0--only-3D444D?style=flat&labelColor=1F2328"></a>
 </p>
+
+---
+
+> **非官方修改版本**：本仓库由 [gthanmon](https://github.com/gthanmon) 维护，基于 [MrBaoboer/PayDance](https://github.com/MrBaoboer/PayDance) 修改，保留原项目版权和 AGPL-3.0-only 许可。下方的官网、官方版本下载和历史更新记录属于上游项目。
+
+## 本分支的新增与修复
+
+- **任务栏实时工资**：在主屏幕的水平任务栏显示今日收入，可收起悬浮窗。成功显示后隐藏系统托盘图标，双击金额打开主页面，右键提供设置、隐藏窗口、迷你模式、置顶和退出菜单。
+- **与 TrafficMonitor 配合**：金额放在监控软件左侧，使用微软雅黑 10 磅常规字体和紧凑间距；修复两个工具反复向左移动以及挂载任务栏时的 `1460` 超时问题。
+- **自由调整位置**：水平偏移支持 `-2000` 到 `2000`，正数向左、负数向右，改动立即保存，重启后恢复。
+- **悬停查看详情**：显示今日已赚、今日预计、工作进度、剩余时间、上下班与午休安排、折算时薪及工作日信息。
+- **自动计算工作日**：支持双休、单休和大小周，结合中国法定节假日与调休安排计算当月上班天数。内置 2025、2026 年数据，联网更新后缓存；未知年份明确标记为暂估，仍可使用手动模式。
+- **静默开机启动**：开机不弹主窗口；自启固定指向 `C:\Program Files\paydance\PayDance.exe`，迁移旧启动项，后续覆盖同名文件即可更新。
+- **时间输入兼容**：修复 Windows 时间控件含秒时误报“上班时间错误”，支持 `HH:mm`、`HH:mm:ss` 及毫秒格式。
+
+完整说明见 [2026-10-27 更新说明](docs/UPDATES_2026-10-27.md)、[更新日志](CHANGELOG.md) 和 [增强版构建与升级指南](docs/LOCAL_BUILD.md)。
+
+### 构建本分支的 Windows 便携版
+
+安装 Node.js 24、Rust stable、Microsoft C++ Build Tools、Windows SDK 和 WebView2 后运行：
+
+```powershell
+npm install
+npm run build:exe:enhanced
+```
+
+输出为 `release-assets/PayDance.exe` 和对应的 SHA256 文件。该构建关闭官方自动更新检查，以保留本分支功能；升级步骤与兼容性边界见构建指南。
 
 ---
 

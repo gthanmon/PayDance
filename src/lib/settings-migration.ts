@@ -11,8 +11,9 @@ import {
   type SalaryType,
 } from "./salary";
 import { parseTimeToMinutes } from "./salary/time";
+import { calendarSettingValidators } from "./work-calendar/settings";
 
-export const settingsSchemaVersion = 4;
+export const settingsSchemaVersion = 5;
 
 type PersistedSalaryConfig = Partial<SalaryConfig> | undefined;
 export type VersionedSalaryConfigInput = {
@@ -67,11 +68,13 @@ const hasOwn = (value: PersistedSalaryConfig, key: keyof SalaryConfig) =>
 const migrateV1ToV2 = (value: unknown) => asPartialConfig(value);
 const migrateV2ToV3 = (value: unknown) => asPartialConfig(value);
 const migrateV3ToV4 = (value: unknown) => asPartialConfig(value);
+const migrateV4ToV5 = (value: unknown) => asPartialConfig(value);
 
 export const settingsMigrations: Record<number, (value: unknown) => unknown> = {
   1: migrateV1ToV2,
   2: migrateV2ToV3,
   3: migrateV3ToV4,
+  4: migrateV4ToV5,
 };
 
 function normalizeSalaryConfig(
@@ -129,7 +132,19 @@ function normalizeSalaryConfig(
     ["lunchStart", isValidTime],
     ["lunchEnd", isValidTime],
     ["enableLunchBreak", isBoolean],
+    ...(Object.entries(calendarSettingValidators) as Array<
+      [keyof SalaryConfig, (value: unknown) => boolean]
+    >),
   ];
+  for (const key of Object.keys(calendarSettingValidators)) {
+    const field = key as keyof typeof calendarSettingValidators;
+    if (
+      hasOwn(savedConfig, field) &&
+      calendarSettingValidators[field](savedConfig?.[field])
+    ) {
+      Object.assign(config, { [field]: savedConfig?.[field] });
+    }
+  }
   let recovered =
     invalidShape ||
     fields.some(

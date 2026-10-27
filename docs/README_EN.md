@@ -3,7 +3,7 @@
   <img src="../src-tauri/icons/icon.png" alt="PayDance" width="92">
 </p>
 
-<h1 align="center">PayDance 薪跳</h1>
+<h1 align="center">PayDance Taskbar Enhanced</h1>
 
 <p align="center">
   Put "the money you are earning today" on your desktop, and watch it grow, second by second
@@ -22,6 +22,22 @@
   <a href="https://github.com/MrBaoboer/PayDance/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/MrBaoboer/PayDance/total?style=flat&label=downloads&labelColor=1F2328&color=3D444D"></a>
   <a href="../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0--only-3D444D?style=flat&labelColor=1F2328"></a>
 </p>
+
+---
+
+> **Unofficial modified fork** maintained by [gthanmon](https://github.com/gthanmon), based on [MrBaoboer/PayDance](https://github.com/MrBaoboer/PayDance). The original copyright and AGPL-3.0-only license are retained. The official website, downloads and historical release notes below refer to the upstream project.
+
+## Fork Enhancements
+
+- Live earnings in the primary horizontal Windows taskbar, with no tray icon while the amount is available. Double-click for the dashboard; right-click for settings, hide, mini mode, always on top and quit.
+- Compact regular 10pt Microsoft YaHei text before TrafficMonitor, without the old repeated leftward drift or cross-process window creation timeout `1460`.
+- Signed horizontal offset from `-2000` to `2000`, saved immediately and restored after restart.
+- Hover details for earnings, expected pay, work progress, countdown, working hours, lunch, pay rates and monthly workdays.
+- Automatic workday counts for two-day weekends, a single weekly rest day or alternating weeks, with Chinese holidays and makeup workdays. Bundled 2025/2026 data works offline; online updates are cached and unknown years are labelled as estimates.
+- Silent autostart through `C:\Program Files\paydance\PayDance.exe`, with legacy startup entry migration and stable updates by replacing the same file.
+- Correct validation and calculation for `HH:mm`, `HH:mm:ss` and fractional-second time inputs.
+
+Build the enhanced Windows executable with `npm install` followed by `npm run build:exe:enhanced`. It produces `release-assets/PayDance.exe` and a SHA256 file, with official update checks disabled. See the [build and upgrade guide](LOCAL_BUILD.md), [release notes](UPDATES_2026-10-27.md) and [English changelog](../CHANGELOG_EN.md).
 
 ---
 

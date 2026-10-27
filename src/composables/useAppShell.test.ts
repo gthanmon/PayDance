@@ -61,6 +61,17 @@ const createShell = (initialMiniMode = false) => {
 };
 
 describe("useAppShell window mode transitions", () => {
+  it("returns to the main dashboard on a taskbar double-click, closing open sheets and mini mode", async () => {
+    const { events, isMiniMode, shell } = createShell(true);
+    shell.showSettings.value = true;
+    shell.showSalaryInfo.value = true;
+    await shell.openMainWindow();
+    expect(isMiniMode.value).toBe(false);
+    expect(shell.showSettings.value).toBe(false);
+    expect(shell.showSalaryInfo.value).toBe(false);
+    expect(events).toEqual(["capture:mini", "apply:main", "restore:main", "save"]);
+  });
+
   it("captures the full window before resizing and restoring the mini position", async () => {
     const { events, restoreWindowPosition, shell } = createShell(false);
 

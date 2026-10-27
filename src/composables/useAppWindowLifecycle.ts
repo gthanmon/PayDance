@@ -82,6 +82,7 @@ export function useAppWindowLifecycle(
     unlisteners.push(
       await appWindow.onCloseRequested(async (event) => {
         event.preventDefault();
+        await saveStateNow();
         await appWindow.hide();
       }),
     );
